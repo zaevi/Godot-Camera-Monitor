@@ -10,6 +10,7 @@ var editor : Control
 
 var source : Camera
 
+var follow : bool
 var attached_camera : Camera
 var attached_rid : RID
 
@@ -28,6 +29,8 @@ func _init(editor_interface : EditorInterface = null):
     
     viewport = Viewport.new()
     # viewport.msaa = Viewport.MSAA_16X
+    viewport.shadow_atlas_size = 2048
+    viewport.shadow_atlas_quad_0 = Viewport.SHADOW_ATLAS_QUADRANT_SUBDIV_1
     viewport.handle_input_locally = false
     viewport.gui_disable_input = true
     vc.add_child(viewport)
@@ -66,6 +69,8 @@ func detach():
 
 func attach(camera : Camera, follow : bool):
     detach()
+    self.follow = follow
+    self.source = camera
     if follow: 
         attached_rid = camera.get_camera_rid()
         VisualServer.viewport_attach_camera(viewport.get_viewport_rid(), attached_rid)
@@ -89,3 +94,11 @@ func _duplicate_camera(from : Camera) -> Camera:
     camera.far = from.far
     camera.global_transform = from.global_transform
     return camera
+
+
+func get_state():
+    return {
+        source = source,
+        follow = follow,
+        camera = null if follow else _duplicate_camera(attached_camera)
+    }
